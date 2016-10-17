@@ -704,7 +704,7 @@ def assignMuniBoundariesSpatial():
 
 def createPolygonBoundaries():
     try:
-        print "begin creating polygon boundaries for spatial queries..."
+        print "BEGIN creating polygon boundaries for spatial queries..."
 
         ## create a new feature class to hold all the polygon values for spatial queries - this fc will be used with the identity tool and the new offset points
         # check if polygon layer exists, delete if exists
@@ -857,7 +857,7 @@ def createPolygonBoundaries():
 
 
         ## create buffers for all the edges
-        print "finished creating polygon boundaries for spatial queries."
+        print "FINISHED creating polygon boundaries for spatial queries."
     except IndexError:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         print "*** print_tb:"
@@ -891,7 +891,7 @@ def createPolygonBoundaries():
 
 def runIdentityTool():
     try:
-        print "begin running identity tool..."
+        print "BEGIN running identity tool..."
         ## Set local parameters
         inFeatures = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts"
         idFeatures = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPolygons"
@@ -900,7 +900,7 @@ def runIdentityTool():
         # Process: Use the Identity function
         arcpy.Identity_analysis (inFeatures, idFeatures, outFeatures)
 
-        print "finished running identity tool."
+        print "FINISHED running identity tool."
     except IndexError:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         print "*** print_tb:"
@@ -927,7 +927,7 @@ def runIdentityTool():
 
 def createOffsetPnts(WhereClauseRoads):
     try:
-        print "begin creating offset points..."
+        print "BEGIN creating offset points..."
 
         ## create a feature class of the two offset points, so we can make a feature layer to pass that into the select by location tool
         # check if points layer exists, delete if exists
@@ -990,7 +990,7 @@ def createOffsetPnts(WhereClauseRoads):
         # clean up resources and memory
         arcpy.Delete_management("lyr_Roads_SCur")
 
-        print "finished creating offset points."
+        print "FINISHED creating offset points."
 
     except IndexError:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -1016,7 +1016,33 @@ def createOffsetPnts(WhereClauseRoads):
 
 
 
+def assignRoadValuesFromOffsetPnts():
+    try:
+        print "BEGIN assigning road values to the road fields based on values in the offset points..."
 
+
+        print "FINISHED assigning road values to the road fields based on values in the offset points."
+    except IndexError:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        print "*** print_tb:"
+        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+        print "*** print_exception:"
+        traceback.print_exception(exc_type, exc_value, exc_traceback,
+                                    limit=2, file=sys.stdout)
+        print "*** print_exc:"
+        traceback.print_exc()
+        print "*** format_exc, first and last line:"
+        formatted_lines = traceback.format_exc().splitlines()
+        print formatted_lines[0]
+        print formatted_lines[-1]
+        print "*** format_exception:"
+        print repr(traceback.format_exception(exc_type, exc_value,
+                                                exc_traceback))
+        print "*** extract_tb:"
+        print repr(traceback.extract_tb(exc_traceback))
+        print "*** format_tb:"
+        print repr(traceback.format_tb(exc_traceback))
+        print "*** tb_lineno:", exc_traceback.tb_lineno
 
 
 
