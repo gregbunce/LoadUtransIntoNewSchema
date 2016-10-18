@@ -895,7 +895,7 @@ def runIdentityTool():
         ## Set local parameters
         inFeatures = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts"
         idFeatures = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPolygons"
-        outFeatures = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityTesting3"
+        outFeatures = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts"
 
         # Process: Use the Identity function
         arcpy.Identity_analysis (inFeatures, idFeatures, outFeatures)
@@ -925,20 +925,23 @@ def runIdentityTool():
 
 
 
+
+
+
+
 def createOffsetPnts(WhereClauseRoads):
     try:
-        print "BEGIN creating offset points..."
+        print "BEGIN creating left/right offset points..."
 
         ## create a feature class of the two offset points, so we can make a feature layer to pass that into the select by location tool
         # check if points layer exists, delete if exists
-        if arcpy.Exists(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts2"):
-            arcpy.Delete_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts2")
-        arcpy.CreateFeatureclass_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb","OffsetRoadSegPnts2","POINT",None,None,None, arcpy.SpatialReference(26912))
+        if arcpy.Exists(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts"):
+            arcpy.Delete_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts")
+        arcpy.CreateFeatureclass_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb","OffsetRoadSegPnts","POINT",None,None,None, arcpy.SpatialReference(26912))
 
         # add a few fields to the newly created feature class
-        arcpy.AddField_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts2", "RdSegOID", "TEXT", 20)
-        arcpy.AddField_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts2", "LeftRight", "TEXT", 20)
-        arcpy.AddField_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts2", "Muni", "TEXT", 50)
+        arcpy.AddField_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts", "RdSegOID", "SHORT")
+        arcpy.AddField_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts", "LeftRight", "TEXT", 20)
 
         # check if we're creating a point for all segments or a subset (aka: maybe just recent edits)
         if WhereClauseRoads == "":
@@ -980,7 +983,7 @@ def createOffsetPnts(WhereClauseRoads):
                 #print pntGeomLeftOffset.centroid
 
                 ## insert the new points into temp feature class
-                with arcpy.da.InsertCursor(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts2", ["SHAPE@X", "SHAPE@Y", "LeftRight", "RdSegOID"]) as insertCurPnts:
+                with arcpy.da.InsertCursor(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\OffsetRoadSegPnts", ["SHAPE@X", "SHAPE@Y", "LeftRight", "RdSegOID"]) as insertCurPnts:
                     row_values = [pntRightOffset.centroid.X, pntRightOffset.centroid.Y, "RIGHT", row_roads[0]]
                     insertCurPnts.insertRow(row_values)
 
@@ -990,7 +993,7 @@ def createOffsetPnts(WhereClauseRoads):
         # clean up resources and memory
         arcpy.Delete_management("lyr_Roads_SCur")
 
-        print "FINISHED creating offset points."
+        print "FINISHED creating left/right offset points."
 
     except IndexError:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -1016,12 +1019,120 @@ def createOffsetPnts(WhereClauseRoads):
 
 
 
-def assignRoadValuesFromOffsetPnts():
+
+
+
+def assignValuesToRoadsFromOffsetPnts():
     try:
         print "BEGIN assigning road values to the road fields based on values in the offset points..."
 
+        ## LEFT SIDE ##
+        # create a feature layer from identity points layer where point intersected... (muni, zipcodes, addrsystem, counties)
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema_")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Left", "MUNI_SHORTDESC IS NOT NULL and LeftRight = 'LEFT'")
+
+        # join the pnts to the roads segments
+        arcpy.AddJoin_management("lyr_RoadsNewSchema", "OBJECTID", "Identity_Muni_Left", "RdSegOID", "KEEP_COMMON")
+
+        ## Execute SaveToLayerFile
+        #arcpy.SaveToLayerFile_management("lyr_RoadsNewSchema", r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\JoinResult2", "ABSOLUTE")
+
+        # make feture layer from join
+        #arcpy.MakeFeatureLayer_management("lyr_RoadsNewSchema", "lyr_withJoin")
+
+        #cursor = arcpy.SearchCursor("lyr_RoadsNewSchema")
+        #row = cursor.next()
+        #while row:
+        #    print(row.getValue("NAME"))
+        #    row = cursor.next()
+
+        with arcpy.da.SearchCursor("lyr_RoadsNewSchema", ["OID@","SHAPE@", "RoadCenterlinesTest.NAME", "RoadCenterlinesTest.INCMUNI_L", "IdentityPnts.MUNI_SHORTDESC"]) as cursor:
+            for row in cursor:
+                updateOID = ""
+                updatedValue = ""
+                updateOID = row[0]
+                updatedValue = row[4]
+                print row[0]
+                #print row[1]
+                #print row[2]
+                #print row[3]
+                #print row[4]
+                #row[0] = row[1]
+                #cursor.updateRow(row)
+
+                with arcpy.da.UpdateCursor("lyr_RoadsNewSchema_", ["INCMUNI_L"], "OBJECTID = " + str(updateOID)) as cursor2:
+                    for row2 in cursor2:
+                        print row2[0]
+                        row2[0] = updatedValue
+                        cursor2.updateRow(row2)
+                del cursor2
+
+        del cursor
+
+        arcpy.Delete_management("lyr_RoadsNewSchema")
+        arcpy.Delete_management("lyr_RoadsNewSchema_")
+        arcpy.Delete_management("Identity_Muni_Left")
+
+
+        ## RIGHT SIDE ##
+        # create a feature layer from identity points layer where point intersected... (muni, zipcodes, addrsystem, counties)
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema2")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema_2")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Right", "MUNI_SHORTDESC IS NOT NULL and LeftRight = 'RIGHT'")
+
+        
+        #result1 = arcpy.GetCount_management("Identity_Muni_Right")
+        #count1 = int(result1.getOutput(0))
+        #print count1
+
+        # join the pnts to the roads segments
+        arcpy.AddJoin_management("lyr_RoadsNewSchema2", "OBJECTID", "Identity_Muni_Right", "RdSegOID", "KEEP_COMMON")
+        #arcpy.JoinField_management("lyr_RoadsNewSchema2", "OBJECTID", "Identity_Muni_Right", "RdSegOID")
+
+
+        #result = arcpy.GetCount_management("lyr_RoadsNewSchema2")
+        #count = int(result.getOutput(0))
+        #print count
+
+
+        x = 0
+        with arcpy.da.SearchCursor("lyr_RoadsNewSchema2", ["OID@", "IdentityPnts.MUNI_SHORTDESC"]) as cursor_:
+            for row_ in cursor_:
+                updateOID2 = ""
+                updatedValue2 = ""
+                updateOID2 = row_[0]
+                updatedValue2 = row_[1]
+                print row_[0]
+                updateOID2
+                print row_[1]
+                updatedValue2
+
+                x = x + 1
+                print x
+
+                #print row[1]
+                #print row[2]
+                #print row[3]
+                #print row[4]
+                #row[0] = row[1]
+                #cursor.updateRow(row)
+
+                with arcpy.da.UpdateCursor("lyr_RoadsNewSchema_2", ["INCMUNI_R"], "OBJECTID = " + str(updateOID2)) as cursor2_:
+                    for row2_ in cursor2_:
+                        print row2_[0]
+                        row2_[0] = updatedValue2
+                        cursor2_.updateRow(row2_)
+                del cursor2_
+
+        del cursor_
+
+        arcpy.Delete_management("lyr_RoadsNewSchema2")
+        arcpy.Delete_management("lyr_RoadsNewSchema_2")
+        arcpy.Delete_management("Identity_Muni_Right")
 
         print "FINISHED assigning road values to the road fields based on values in the offset points."
+    
     except IndexError:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         print "*** print_tb:"
@@ -1054,9 +1165,9 @@ def assignRoadValuesFromOffsetPnts():
 
 #createPolygonBoundaries()
 
-roadsWhereClause = "" # could pass in only recent edits
-createOffsetPnts(roadsWhereClause)
+#roadsWhereClause = "" # could pass in only recent edits 
+#createOffsetPnts(roadsWhereClause)
 
 #runIdentityTool()
 
-#assignRoadValuesFromOffsetPnts()
+assignValuesToRoadsFromOffsetPnts()
