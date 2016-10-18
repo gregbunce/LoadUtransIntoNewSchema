@@ -18,7 +18,7 @@ utransRoads = r'Database Connections\DC_TRANSADMIN@UTRANS@utrans.agrc.utah.gov.s
 #utransRoads = r'D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\UtransTesting'
 newRoadsSchemaFGBpath = r'D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines'
 
-# append a new method to the FieldMap object... to aviod the annoying output name pattern
+# append SettyBetty method to the FieldMap object... to aviod the annoying output name pattern
 def setOutputFieldName(self, name):
     """set the output field name of a fieldmap."""
     tempName = self.outputField
@@ -39,7 +39,8 @@ def main(utransRoads, newRoadsSchemaFGBpath):
 
         # delete existing features in file geodatabase
         arcpy.management.TruncateTable(newRoadsSchemaFGBpath)
-        print "Cleaning up local parcel data"
+        print "Truncating the data in the new schema feature class"
+        arcpy.management.TruncateTable(newRoadsSchemaFGBpath)
 
         # use field mapping to transfer the data over
         fieldmappings = arcpy.FieldMappings()
@@ -1022,116 +1023,71 @@ def createOffsetPnts(WhereClauseRoads):
 
 
 
-def assignValuesToRoadsFromOffsetPnts():
+def assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight):
     try:
-        print "BEGIN assigning road values to the road fields based on values in the offset points..."
+        print "BEGIN assigning values to the road fields based on values in the offset points..."
 
         ## LEFT SIDE ##
+        print "Left Fields - Begin"
         # create a feature layer from identity points layer where point intersected... (muni, zipcodes, addrsystem, counties)
         arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema")
         arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema_")
-        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Left", "MUNI_SHORTDESC IS NOT NULL and LeftRight = 'LEFT'")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Left", str(identityFieldNameForJoin) + " IS NOT NULL and LeftRight = 'LEFT'")
 
         # join the pnts to the roads segments
         arcpy.AddJoin_management("lyr_RoadsNewSchema", "OBJECTID", "Identity_Muni_Left", "RdSegOID", "KEEP_COMMON")
 
-        ## Execute SaveToLayerFile
-        #arcpy.SaveToLayerFile_management("lyr_RoadsNewSchema", r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\JoinResult2", "ABSOLUTE")
-
-        # make feture layer from join
-        #arcpy.MakeFeatureLayer_management("lyr_RoadsNewSchema", "lyr_withJoin")
-
-        #cursor = arcpy.SearchCursor("lyr_RoadsNewSchema")
-        #row = cursor.next()
-        #while row:
-        #    print(row.getValue("NAME"))
-        #    row = cursor.next()
-
-        with arcpy.da.SearchCursor("lyr_RoadsNewSchema", ["OID@","SHAPE@", "RoadCenterlinesTest.NAME", "RoadCenterlinesTest.INCMUNI_L", "IdentityPnts.MUNI_SHORTDESC"]) as cursor:
+        with arcpy.da.SearchCursor("lyr_RoadsNewSchema", ["OID@", "IdentityPnts." + str(identityFieldNameForJoin)]) as cursor:
             for row in cursor:
                 updateOID = ""
                 updatedValue = ""
                 updateOID = row[0]
-                updatedValue = row[4]
-                print row[0]
-                #print row[1]
-                #print row[2]
-                #print row[3]
-                #print row[4]
-                #row[0] = row[1]
-                #cursor.updateRow(row)
+                updatedValue = row[1]
 
-                with arcpy.da.UpdateCursor("lyr_RoadsNewSchema_", ["INCMUNI_L"], "OBJECTID = " + str(updateOID)) as cursor2:
+                with arcpy.da.UpdateCursor("lyr_RoadsNewSchema_", [str(assignValuesFieldNameLeft)], "OBJECTID = " + str(updateOID)) as cursor2:
                     for row2 in cursor2:
-                        print row2[0]
                         row2[0] = updatedValue
                         cursor2.updateRow(row2)
                 del cursor2
-
         del cursor
 
+        print "Left Fields for " + str(identityFieldNameForJoin) + "  - Done!"
         arcpy.Delete_management("lyr_RoadsNewSchema")
         arcpy.Delete_management("lyr_RoadsNewSchema_")
         arcpy.Delete_management("Identity_Muni_Left")
 
 
+
         ## RIGHT SIDE ##
+        print "Right Fields - Begin"
         # create a feature layer from identity points layer where point intersected... (muni, zipcodes, addrsystem, counties)
         arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema2")
         arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema_2")
-        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Right", "MUNI_SHORTDESC IS NOT NULL and LeftRight = 'RIGHT'")
-
-        
-        #result1 = arcpy.GetCount_management("Identity_Muni_Right")
-        #count1 = int(result1.getOutput(0))
-        #print count1
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Right", str(identityFieldNameForJoin) + " IS NOT NULL and LeftRight = 'RIGHT'")
 
         # join the pnts to the roads segments
         arcpy.AddJoin_management("lyr_RoadsNewSchema2", "OBJECTID", "Identity_Muni_Right", "RdSegOID", "KEEP_COMMON")
         #arcpy.JoinField_management("lyr_RoadsNewSchema2", "OBJECTID", "Identity_Muni_Right", "RdSegOID")
 
-
-        #result = arcpy.GetCount_management("lyr_RoadsNewSchema2")
-        #count = int(result.getOutput(0))
-        #print count
-
-
-        x = 0
-        with arcpy.da.SearchCursor("lyr_RoadsNewSchema2", ["OID@", "IdentityPnts.MUNI_SHORTDESC"]) as cursor_:
+        with arcpy.da.SearchCursor("lyr_RoadsNewSchema2", ["OID@", "IdentityPnts." + str(identityFieldNameForJoin)]) as cursor_:
             for row_ in cursor_:
                 updateOID2 = ""
                 updatedValue2 = ""
                 updateOID2 = row_[0]
                 updatedValue2 = row_[1]
-                print row_[0]
-                updateOID2
-                print row_[1]
-                updatedValue2
 
-                x = x + 1
-                print x
-
-                #print row[1]
-                #print row[2]
-                #print row[3]
-                #print row[4]
-                #row[0] = row[1]
-                #cursor.updateRow(row)
-
-                with arcpy.da.UpdateCursor("lyr_RoadsNewSchema_2", ["INCMUNI_R"], "OBJECTID = " + str(updateOID2)) as cursor2_:
+                with arcpy.da.UpdateCursor("lyr_RoadsNewSchema_2", [str(assignValuesFieldNameRight)], "OBJECTID = " + str(updateOID2)) as cursor2_:
                     for row2_ in cursor2_:
-                        print row2_[0]
                         row2_[0] = updatedValue2
                         cursor2_.updateRow(row2_)
                 del cursor2_
-
         del cursor_
-
+        print "Right Fields for " + str(identityFieldNameForJoin) + " - Done!"
         arcpy.Delete_management("lyr_RoadsNewSchema2")
         arcpy.Delete_management("lyr_RoadsNewSchema_2")
         arcpy.Delete_management("Identity_Muni_Right")
 
-        print "FINISHED assigning road values to the road fields based on values in the offset points."
+        print "FINISHED assigning values to the road fields based on values in the offset points."
     
     except IndexError:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -1160,7 +1116,7 @@ def assignValuesToRoadsFromOffsetPnts():
 
 
 # call the functions
-#main(utransRoads, newRoadsSchemaFGBpath)
+main(utransRoads, newRoadsSchemaFGBpath)
 #assignMuniBoundariesSpatial()
 
 #createPolygonBoundaries()
@@ -1170,4 +1126,14 @@ def assignValuesToRoadsFromOffsetPnts():
 
 #runIdentityTool()
 
-assignValuesToRoadsFromOffsetPnts()
+
+#identityFieldNameForJoin = "MUNI_SHORTDESC"
+#assignValuesFieldNameLeft = "INCMUNI_L"
+#assignValuesFieldNameRight = "INCMUNI_R"
+#assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
+
+
+#identityFieldNameForJoin = "ZIP_NUM"
+#assignValuesFieldNameLeft = "ZIPCODE_L"
+#assignValuesFieldNameRight = "ZIPCODE_R"
+#assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
