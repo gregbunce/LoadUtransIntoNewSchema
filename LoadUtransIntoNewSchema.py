@@ -703,6 +703,7 @@ def assignMuniBoundariesSpatial():
 
 
 
+
 def createPolygonBoundaries():
     try:
         print "BEGIN creating polygon boundaries for spatial queries..."
@@ -731,7 +732,6 @@ def createPolygonBoundaries():
         if arcpy.Exists(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdPoly_Intersected"):
             arcpy.Delete_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdPoly_Intersected")
         
-        
         ## MUNI
         ## append muni boundaries (NAME, SHORTDESC)
          # use field mapping to transfer the data over
@@ -742,7 +742,8 @@ def createPolygonBoundaries():
         fldmap_ShortDesc = arcpy.FieldMap()
 
         # Add all fields from the input feature class to the fieldmappings object. AddTable is the most efficient way.
-        muniPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\Muni_sample"
+        #muniPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\Muni_sample"
+        muniPolys = r"Database Connections\agrc@sgid@sgid.agrc.utah.gov.sde\SGID10.BOUNDARIES.Municipalities"
         fieldmappings.addTable(muniPolys)
 
         # define field maps for each field based on field names
@@ -759,8 +760,6 @@ def createPolygonBoundaries():
         # append the data
         arcpy.Append_management(muniPolys, indentityPolys, "NO_TEST", fieldmappings)
 
-
-
         ## ZIPCODES
         # append zipcodes boundaries (ZIP5, NAME)
         # use field mapping to transfer the data over
@@ -771,7 +770,8 @@ def createPolygonBoundaries():
         fldmap_ZipName = arcpy.FieldMap()
 
         # Add all fields from the input feature class to the fieldmappings object. AddTable is the most efficient way.
-        zipPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\ZipCodes_sample"
+        #zipPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\ZipCodes_sample"
+        zipPolys = r"Database Connections\agrc@sgid@sgid.agrc.utah.gov.sde\SGID10.BOUNDARIES.ZipCodes"
         fieldmappings.addTable(zipPolys)
 
         # define field maps for each field based on field names
@@ -788,8 +788,6 @@ def createPolygonBoundaries():
         # append the data
         arcpy.Append_management(zipPolys, indentityPolys, "NO_TEST", fieldmappings)
 
-
-
         ## COUNTIES
         # append counties boundaries (NAME, FIPS_STR)
         # use field mapping to transfer the data over
@@ -800,7 +798,8 @@ def createPolygonBoundaries():
         fldmap_Cofips = arcpy.FieldMap()
 
         # Add all fields from the input feature class to the fieldmappings object. AddTable is the most efficient way.
-        countyPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\Counties_sample"
+        #countyPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\Counties_sample"
+        countyPolys = r"Database Connections\agrc@sgid@sgid.agrc.utah.gov.sde\SGID10.BOUNDARIES.Counties"
         fieldmappings.addTable(countyPolys)
 
         # define field maps for each field based on field names
@@ -817,9 +816,6 @@ def createPolygonBoundaries():
         # append the data
         arcpy.Append_management(countyPolys, indentityPolys, "NO_TEST", fieldmappings)
 
-
-
-
         ## ADDRESS SYSTEM
         # append address system boundaries (GRID_NAME, QUADRANT)
         # use field mapping to transfer the data over
@@ -830,7 +826,8 @@ def createPolygonBoundaries():
         fldmap_QuadName = arcpy.FieldMap()
 
         # Add all fields from the input feature class to the fieldmappings object. AddTable is the most efficient way.
-        addrPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\AddrSys_sample"
+        #addrPolys = r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\AddrSys_sample"
+        addrPolys = r"Database Connections\agrc@sgid@sgid.agrc.utah.gov.sde\SGID10.LOCATION.AddressSystemQuadrants"
         fieldmappings.addTable(addrPolys)
 
         # define field maps for each field based on field names
@@ -946,9 +943,9 @@ def createOffsetPnts(WhereClauseRoads):
 
         # check if we're creating a point for all segments or a subset (aka: maybe just recent edits)
         if WhereClauseRoads == "":
-            arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_Roads_SCur")
+            arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines", "lyr_Roads_SCur")
         else:
-            arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_Roads_SCur", WhereClauseRoads)
+            arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines", "lyr_Roads_SCur", WhereClauseRoads)
 
         # loop through the appropriate segments in the roads layer
         with arcpy.da.SearchCursor("lyr_Roads_SCur", ["OID@","SHAPE@"]) as cursor_roads:
@@ -956,16 +953,16 @@ def createOffsetPnts(WhereClauseRoads):
                 print "Road Segment OID: " + str(row_roads[0])
                         
                 # get the first point on the polyline
-                roadSegFirstPoint = row_roads[1].firstPoint
-                pnt1Geom = arcpy.PointGeometry(roadSegFirstPoint, arcpy.SpatialReference(26912)) 
+                #roadSegFirstPoint = row_roads[1].firstPoint
+                pnt1Geom = arcpy.PointGeometry(row_roads[1].firstPoint, arcpy.SpatialReference(26912)) 
 
                 # get the last point on the polyline
-                roadSegLastPoint = row_roads[1].lastPoint
-                pnt2Geom = arcpy.PointGeometry(roadSegLastPoint, arcpy.SpatialReference(26912))
+                #roadSegLastPoint = row_roads[1].lastPoint
+                pnt2Geom = arcpy.PointGeometry(row_roads[1].lastPoint, arcpy.SpatialReference(26912))
                 
                 # get the midpoint of the polyline
                 roadSegMidPoint = row_roads[1].positionAlongLine(0.5, True)
-                #pntMidGeom = arcpy.PointGeometry(roadSegMidPoint, arcpy.SpatialReference(26912))
+                pntMidGeom = arcpy.PointGeometry(roadSegMidPoint.centroid, arcpy.SpatialReference(26912))
 
                 # get the angle between the first and last point on the polyline
                 roadSegAngleDistTo = pnt1Geom.angleAndDistanceTo(pnt2Geom)[0] # use [0] to only return the angle tuple, without that it would need two variables one for the angle and one for the distance
@@ -973,12 +970,12 @@ def createOffsetPnts(WhereClauseRoads):
                 #print segmentAngleRight
 
                 # create two new point based on the midpoint of the segment, and the angle of the polyline, and an offset value (a point each for right and left sides)
-                pntRightOffset = roadSegMidPoint.pointFromAngleAndDistance(roadSegAngleDistTo + 90, 10.06) #15.24 meters is 50 feet, 10.0584 meters is 33 feet
+                pntRightOffset = pntMidGeom.pointFromAngleAndDistance(roadSegAngleDistTo + 90, 10.06) #15.24 meters is 50 feet, 10.0584 meters is 33 feet
                 #print pntRightOffset.centroid
                 pntGeomRightOffset = arcpy.PointGeometry(pntRightOffset.centroid, arcpy.SpatialReference(26912))
                 #print pntGeomRightOffset.centroid
 
-                pntLeftOffset = roadSegMidPoint.pointFromAngleAndDistance(roadSegAngleDistTo - 90, 10.06) #15.24 meters is 50 feet, 10.0584 meters is 33 feet
+                pntLeftOffset = pntMidGeom.pointFromAngleAndDistance(roadSegAngleDistTo - 90, 10.06) #15.24 meters is 50 feet, 10.0584 meters is 33 feet
                 #print pntLeftOffset.centroid
                 pntGeomLeftOffset = arcpy.PointGeometry(pntLeftOffset.centroid, arcpy.SpatialReference(26912))
                 #print pntGeomLeftOffset.centroid
@@ -1030,8 +1027,8 @@ def assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFiel
         ## LEFT SIDE ##
         print "Left Fields - Begin"
         # create a feature layer from identity points layer where point intersected... (muni, zipcodes, addrsystem, counties)
-        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema")
-        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema_")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines", "lyr_RoadsNewSchema")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines", "lyr_RoadsNewSchema_")
         arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Left", str(identityFieldNameForJoin) + " IS NOT NULL and LeftRight = 'LEFT'")
 
         # join the pnts to the roads segments
@@ -1061,8 +1058,8 @@ def assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFiel
         ## RIGHT SIDE ##
         print "Right Fields - Begin"
         # create a feature layer from identity points layer where point intersected... (muni, zipcodes, addrsystem, counties)
-        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema2")
-        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlinesTest", "lyr_RoadsNewSchema_2")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines", "lyr_RoadsNewSchema2")
+        arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines", "lyr_RoadsNewSchema_2")
         arcpy.MakeFeatureLayer_management(r"D:\SGID Roads New Schema\NewSchemaTesting.gdb\IdentityPnts", "Identity_Muni_Right", str(identityFieldNameForJoin) + " IS NOT NULL and LeftRight = 'RIGHT'")
 
         # join the pnts to the roads segments
@@ -1116,13 +1113,12 @@ def assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFiel
 
 
 # call the functions
-main(utransRoads, newRoadsSchemaFGBpath)
-#assignMuniBoundariesSpatial()
+#main(utransRoads, newRoadsSchemaFGBpath)
 
 #createPolygonBoundaries()
 
-#roadsWhereClause = "" # could pass in only recent edits 
-#createOffsetPnts(roadsWhereClause)
+roadsWhereClause = "OBJECTID < 100" # could pass in only recent edits 
+createOffsetPnts(roadsWhereClause)
 
 #runIdentityTool()
 
