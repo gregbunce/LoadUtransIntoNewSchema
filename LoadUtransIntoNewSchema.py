@@ -1142,6 +1142,21 @@ def FieldExist(featureclass, fieldname):
         return False
 
 
+
+################# My notes #########################
+# 1. bring in field values from utrans that we're going to spatially assign as uppercase - because when i do the compare if the case is different they don't match
+# 1. create a function to see if the nre schema roads already exists 
+#   -if so, get the most recent mod date and use that to delete all recordsfrom that then date
+#   -then, get all records from that date and forward (from utrans) and append into the new schema  
+# 2. do update cursor on spatial fields only when the existing value doesn't match the new spatially-aquired value 
+#   this should make the update cursor faster, as it only has to process where they don't match
+#
+#
+#
+#
+################# My notes #########################
+
+
 ## CALL THE FUNCTIONS AS NEEDED ##
 #main(utransRoads, newRoadsSchemaFGBpath)
 
@@ -1153,11 +1168,11 @@ def FieldExist(featureclass, fieldname):
 
 #runIdentityTool()
 
-## spatially assign incorporated municipality left/right fields
-identityFieldNameForJoin = "MUNI_SHORTDESC"
-assignValuesFieldNameLeft = "INCMUNI_L"
-assignValuesFieldNameRight = "INCMUNI_R"
-assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
+### spatially assign incorporated municipality left/right fields
+#identityFieldNameForJoin = "MUNI_SHORTDESC"
+#assignValuesFieldNameLeft = "INCMUNI_L"
+#assignValuesFieldNameRight = "INCMUNI_R"
+#assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
 ## spatially assign zipcode left/right number fields
 #identityFieldNameForJoin = "ZIP_NUM"
