@@ -1026,7 +1026,7 @@ def assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFiel
     try:
         # change this to first add duplicate fields in the roads dataset corisponding to the spatial asigned fields (aka: INCMUNI_L_SA, INCMUNI_R_SA) - added "_SA" for spatially assigned
         # then populate those fields so we can retain the originals
-        print "Began processing assignValuesToRoadsFromOffsetPnts() at: " + strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        print "Began processing assignValuesToRoadsFromOffsetPnts() for " + str(identityFieldNameForJoin) +" at: " + strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
         ## check if spatial assignment fields exist (both left and right side fields)
         print "Check if spatial assignment fields exist..."        
@@ -1143,16 +1143,13 @@ def FieldExist(featureclass, fieldname):
 
 
 
-################# My notes #########################
+################# My notes - things to change and make better #########################
 # 1. bring in field values from utrans that we're going to spatially assign as uppercase - because when i do the compare if the case is different they don't match
-# 1. create a function to see if the nre schema roads already exists 
+# 2. create a function to see if the nre schema roads already exists 
 #   -if so, get the most recent mod date and use that to delete all recordsfrom that then date
 #   -then, get all records from that date and forward (from utrans) and append into the new schema  
-# 2. do update cursor on spatial fields only when the existing value doesn't match the new spatially-aquired value 
+# 3. do update cursor on spatial fields only when the existing value doesn't match the new spatially-aquired value 
 #   this should make the update cursor faster, as it only has to process where they don't match
-#
-#
-#
 #
 ################# My notes #########################
 
@@ -1180,11 +1177,11 @@ def FieldExist(featureclass, fieldname):
 #assignValuesFieldNameRight = "ZIPCODE_R"
 #assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
-## spatially assign postal community name left/right fields
-#identityFieldNameForJoin = "ZIP_NAME"
-#assignValuesFieldNameLeft = "POSTCOMM_L"
-#assignValuesFieldNameRight = "POSTCOMM_R"
-#assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
+# spatially assign postal community name left/right fields
+identityFieldNameForJoin = "ZIP_NAME"
+assignValuesFieldNameLeft = "POSTCOMM_L"
+assignValuesFieldNameRight = "POSTCOMM_R"
+assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
 ## spatially assign county name (cofips) left/right fields
 #identityFieldNameForJoin = "CNTY_COFIPS"
@@ -1192,11 +1189,11 @@ def FieldExist(featureclass, fieldname):
 #assignValuesFieldNameRight = "COUNTY_R"
 #assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
-## spatially assign address system left/right fields
-#identityFieldNameForJoin = "ADDR_SYS"
-#assignValuesFieldNameLeft = "ADDRSYS_L"
-#assignValuesFieldNameRight = "ADDRSYS_R"
-#assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
+# spatially assign address system left/right fields
+identityFieldNameForJoin = "ADDR_SYS"
+assignValuesFieldNameLeft = "ADDRSYS_L"
+assignValuesFieldNameRight = "ADDRSYS_R"
+assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
 ## spatially assign address quad field
 #identityFieldNameForJoin = "ADDR_QUAD"
