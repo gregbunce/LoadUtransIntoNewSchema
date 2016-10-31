@@ -17,7 +17,7 @@ from arcpy import env
 # maybe make these imput parameters
 utransRoads = r'Database Connections\DC_TRANSADMIN@UTRANS@utrans.agrc.utah.gov.sde\UTRANS.TRANSADMIN.Centerlines_Edit\UTRANS.TRANSADMIN.StatewideStreets'
 #utransRoads = r'D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\UtransTesting'
-newRoadsSchemaFGBpath = r'D:\SGID Roads New Schema\CenterLineSchema20160906_143901.gdb\RoadCenterlines'
+newRoadsSchemaFGBpath = r'D:\SGID Roads New Schema\CenterLineSchema20161031_105124.gdb\RoadCenterlines'
 
 # append SettyBetty method to the FieldMap object... to aviod the annoying output name pattern
 def setOutputFieldName(self, name):
@@ -231,7 +231,7 @@ def main(utransRoads, newRoadsSchemaFGBpath):
 
         # ADDRSYS_QUAD - text 2
         fldmap_AddrSystemQuad.addInputField(utransRoads, "ADDR_QUAD")
-        fldmap_AddrSystemQuad.outputFieldSettyBetty('ADDRSYS_QUAD')
+        fldmap_AddrSystemQuad.outputFieldSettyBetty('QUADRANT')
         fieldmappings.addFieldMap(fldmap_AddrSystemQuad)
 
         # STATE_L - text 2 w/domain
@@ -313,12 +313,18 @@ def main(utransRoads, newRoadsSchemaFGBpath):
 
         # SPEED_LIMIT - shortint w/domain
         fldmap_SpeedLimit.addInputField(utransRoads, "SPEED")
-        fldmap_SpeedLimit.outputFieldSettyBetty('SPEED_LIMIT')
+        fldmap_SpeedLimit.outputFieldSettyBetty('SPEED_LMT')
         fieldmappings.addFieldMap(fldmap_SpeedLimit)
 
-        # ACCESS - text 1 w/domain
+        # ACCESSCODE - text 1 w/domain (i removed the domian b/c we have too many characters in utrans)
+        fldmap_Access.addInputField(utransRoads, "ACCESS")
+        fldmap_Access.outputFieldSettyBetty('ACCESSCODE')
+        fieldmappings.addFieldMap(fldmap_Access)
 
         # DOT_HWYNAME - text 15
+        fldmap_Dot_HwyName.addInputField(utransRoads, "HWYNAME")
+        fldmap_Dot_HwyName.outputFieldSettyBetty('DOT_HWYNAM')
+        fieldmappings.addFieldMap(fldmap_Dot_HwyName)
 
         # DOT_RTNAME - text 11
 
@@ -328,9 +334,15 @@ def main(utransRoads, newRoadsSchemaFGBpath):
 
         # DOT_T_MILE - float
 
-        # DOT_F_CLASS - text 20
+        # DOT_FCLASS - text 20 w/domain
+        fldmap_Dot_F_Class.addInputField(utransRoads, "DOT_FUNC")
+        fldmap_Dot_F_Class.outputFieldSettyBetty('DOT_FCLASS')
+        fieldmappings.addFieldMap(fldmap_Dot_F_Class)
 
-        # DOT_SURFTYPE - text 30 w/domain
+        # DOT_SRFTYP - text 30 w/domain
+        fldmap_Dot_SurfType.addInputField(utransRoads, "SURFTYPE")
+        fldmap_Dot_SurfType.outputFieldSettyBetty('DOT_SRFTYP')
+        fieldmappings.addFieldMap(fldmap_Dot_SurfType)
 
         # DOT_CLASS - text 1 w/domain
 
@@ -377,10 +389,6 @@ def main(utransRoads, newRoadsSchemaFGBpath):
 
         print "Finished Appending Data using the FieldMapping"
         arcpy.AddMessage("Finished Appending Data using the FieldMapping")
-
-        print "Begin populating fields based on spatial queries"
-        arcpy.AddMessage("Begin populating fields based on spatial queries")
-
 
         print "Finished executing LoadUtransIntoNewSchema.py script."
         arcpy.AddMessage("Finished executing LoadUtransIntoNewSchema.py script.")
@@ -1155,7 +1163,7 @@ def FieldExist(featureclass, fieldname):
 
 
 ## CALL THE FUNCTIONS AS NEEDED ##
-#main(utransRoads, newRoadsSchemaFGBpath)
+main(utransRoads, newRoadsSchemaFGBpath)
 
 #createPolygonBoundaries()
 
@@ -1177,11 +1185,11 @@ def FieldExist(featureclass, fieldname):
 #assignValuesFieldNameRight = "ZIPCODE_R"
 #assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
-# spatially assign postal community name left/right fields
-identityFieldNameForJoin = "ZIP_NAME"
-assignValuesFieldNameLeft = "POSTCOMM_L"
-assignValuesFieldNameRight = "POSTCOMM_R"
-assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
+## spatially assign postal community name left/right fields
+#identityFieldNameForJoin = "ZIP_NAME"
+#assignValuesFieldNameLeft = "POSTCOMM_L"
+#assignValuesFieldNameRight = "POSTCOMM_R"
+#assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
 ## spatially assign county name (cofips) left/right fields
 #identityFieldNameForJoin = "CNTY_COFIPS"
@@ -1189,11 +1197,11 @@ assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNam
 #assignValuesFieldNameRight = "COUNTY_R"
 #assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
-# spatially assign address system left/right fields
-identityFieldNameForJoin = "ADDR_SYS"
-assignValuesFieldNameLeft = "ADDRSYS_L"
-assignValuesFieldNameRight = "ADDRSYS_R"
-assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
+## spatially assign address system left/right fields
+#identityFieldNameForJoin = "ADDR_SYS"
+#assignValuesFieldNameLeft = "ADDRSYS_L"
+#assignValuesFieldNameRight = "ADDRSYS_R"
+#assignValuesToRoadsFromOffsetPnts(identityFieldNameForJoin, assignValuesFieldNameLeft, assignValuesFieldNameRight)
 
 ## spatially assign address quad field
 #identityFieldNameForJoin = "ADDR_QUAD"
